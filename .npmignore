@@ -1,0 +1,32 @@
+# Source files (only dist is needed)
+src/
+tests/
+examples/
+scratchpad/
+
+# Config files
+tsconfig.json
+vitest.config.ts
+docker-compose.yml
+.gitignore
+
+# CI/CD
+.github/
+.claude/
+
+# Development files
+*.log
+*.tgz
+.DS_Store
+node_modules/
+coverage/
+.nyc_output/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bun files
+bun.lockb

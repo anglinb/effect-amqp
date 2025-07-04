@@ -1,0 +1,7 @@
+services:
+  lavinmq:
+    image: "cloudamqp/lavinmq:latest"
+    ports:
+      - 15672:15672 # HTTP
+      - 5672:5672 # AMQP
+

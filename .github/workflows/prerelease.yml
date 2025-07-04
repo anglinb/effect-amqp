@@ -1,0 +1,113 @@
+name: Pre-release
+
+on:
+  push:
+    tags:
+      - 'v*-*' # Push events to pre-release tags like v1.0.0-beta.1, v1.0.0-rc.1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Start LavinMQ/RabbitMQ
+      run: docker-compose up -d
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Type check all files
+      run: npm run typecheck:all
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Wait for AMQP server
+      run: |
+        timeout 30 sh -c 'until nc -z localhost 5672; do sleep 1; done'
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Stop services
+      if: always()
+      run: docker-compose down
+
+  publish-prerelease:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Extract prerelease tag
+      id: prerelease
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/v}
+        if [[ $TAG_NAME == *"-"* ]]; then
+          PRERELEASE_TAG=$(echo $TAG_NAME | grep -o '\-.*' | cut -d'-' -f2 | cut -d'.' -f1)
+          echo "tag=$PRERELEASE_TAG" >> $GITHUB_OUTPUT
+        else
+          echo "tag=latest" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Publish to npm with prerelease tag
+      run: npm publish --provenance --access public --tag ${{ steps.prerelease.outputs.tag }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-prerelease:
+    needs: publish-prerelease
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create GitHub Pre-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Pre-release ${{ github.ref }}
+        body: |
+          ⚠️ **This is a pre-release version**
+          
+          This version is not yet stable and may contain bugs. Use at your own risk.
+          
+          Install from npm:
+          ```bash
+          npm install effect-amqp@${{ github.ref_name }}
+          ```
+          
+          Or install with the prerelease tag:
+          ```bash
+          npm install effect-amqp@${{ steps.prerelease.outputs.tag }}
+          ```
+        draft: false
+        prerelease: true

@@ -1,0 +1,58 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Start LavinMQ/RabbitMQ
+      run: docker-compose up -d
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Type check all files
+      run: npm run typecheck:all
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Wait for AMQP server
+      run: |
+        timeout 30 sh -c 'until nc -z localhost 5672; do sleep 1; done'
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Run tests with coverage
+      run: npm run test:coverage
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: matrix.node-version == '20.x'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Stop services
+      if: always()
+      run: docker-compose down
