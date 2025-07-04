@@ -40,7 +40,7 @@
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "tsc --noEmit --project tsconfig.check.json",
-    "test": "vitest run --timeout=35000",
+    "test": "vitest run --testTimeout=35000",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "lint": "npm run typecheck:all",
