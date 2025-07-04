@@ -42,7 +42,6 @@
     "typecheck:all": "tsc --noEmit --project tsconfig.check.json",
     "test": "vitest run --testTimeout=35000",
     "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
     "lint": "npm run typecheck:all",
     "release": "./scripts/release.sh",
     "release:major": "./scripts/release.sh major",
