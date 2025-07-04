@@ -23,7 +23,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     
     - name: Start LavinMQ/RabbitMQ
-      run: docker-compose up -d
+      run: docker compose up -d
     
     - name: Install dependencies
       run: npm install
@@ -55,4 +55,4 @@ jobs:
     
     - name: Stop services
       if: always()
-      run: docker-compose down
+      run: docker compose down
