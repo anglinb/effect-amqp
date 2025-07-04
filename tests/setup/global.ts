@@ -13,14 +13,14 @@ export async function setup() {
 
   try {
     // Stop any existing container
-    execSync("docker-compose down", { stdio: "ignore" });
+    execSync("docker compose down", { stdio: "ignore" });
   } catch {
     // Ignore if no container was running
   }
 
   try {
     // Start LavinMQ container
-    execSync("docker-compose up -d", { stdio: "inherit" });
+    execSync("docker compose up -d", { stdio: "inherit" });
     
     // Wait for LavinMQ to be ready
     console.log("⏳ Waiting for LavinMQ to be ready...");
@@ -59,7 +59,7 @@ export async function teardown() {
   console.log("🧹 Cleaning up LavinMQ container...");
   
   try {
-    execSync("docker-compose down", { stdio: "inherit" });
+    execSync("docker compose down", { stdio: "inherit" });
     console.log("✅ LavinMQ container stopped");
   } catch (error) {
     console.error("❌ Failed to stop LavinMQ container:", error);
